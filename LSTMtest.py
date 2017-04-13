@@ -25,60 +25,11 @@ import tensorflow.contrib.layers as layers
 from my_lstm_cell import MyLSTMCell as myCell
 import os
 import urllib2
+import matplotlib.pyplot as plt
+import numpy as np
 #from tensorflow.examples.mnist import input_data
 
 map_fn = tf.map_fn
-
-################################################################################
-##                           DATASET GENERATION                               ##
-##                                                                            ##
-##  The problem we are trying to solve is adding two binary numbers. The      ##
-##  numbers are reversed, so that the state of RNN can add the numbers        ##
-##  perfectly provided it can learn to store carry in the state. Timestep t   ##
-##  corresponds to bit len(number) - t.                                       ##
-################################################################################
-
-def as_bytes(num, final_size):
-    res = []
-    for _ in range(final_size):
-        res.append(num % 2)
-        num //= 2
-    return res
-
-def generate_example(num_bits):
-    a = random.randint(0, 2**(num_bits - 1) - 1)
-    return (as_bytes(a,  num_bits))
-
-def generate_batch(num_bits, batch_size):
-    """Generates instance of a problem.
-    Returns
-    -------
-    x: np.array
-        two numbers to be added represented by bits.
-        shape: b, i, n
-        where:
-            b is bit index from the end
-            i is example idx in batch
-            n is one of [0,1] depending for first and
-                second summand respectively
-    y: np.array
-        the result of the addition
-        shape: b, i, n
-        where:
-            b is bit index from the end
-            i is example idx in batch
-            n is always 0
-    """
-
-    x = np.empty((num_bits, batch_size, 2))
-    y = np.empty((num_bits, batch_size, 1))
-
-    for i in range(batch_size):
-        a = generate_example(num_bits)
-        x[:, i, 0] = a
-        x[:, i, 1] = 0
-        y[:, i, 0] = 1
-    return x, y
 
 def acquireData():
     if os.path.exists('m_combined.csv'):
@@ -218,8 +169,20 @@ for epoch in range(3):
     })
     print("Epoch %d, train error: %.2f, valid accuracy: %.1f %%" % (epoch, epoch_error, valid_accuracy * 100.0))
 
-error = session.run(res, {
+output = session.run(res, {
+        inputs:  xTest,
+        outputs: yTest,
+    })
+error = session.run(error, {
         inputs:  xTest,
         outputs: yTest,
     })
 print(error)
+
+
+plt.figure(2)
+plt.plot(t[240*BATCH_SIZE:300*BATCH_SIZE], output.flatten())
+plt.plot(t[240*BATCH_SIZE:300*BATCH_SIZE], highMag[240*BATCH_SIZE:300*BATCH_SIZE])
+plt.xlabel("P(E)")
+plt.ylabel("P(EQ > 5)")
+plt.show()
