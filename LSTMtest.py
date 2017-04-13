@@ -22,6 +22,8 @@ import random
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
 from my_lstm_cell import MyLSTMCell as myCell
+import os
+import urllib2
 #from tensorflow.examples.mnist import input_data
 
 map_fn = tf.map_fn
@@ -80,7 +82,17 @@ def generate_batch(num_bits, batch_size):
     return x, y
 
 def acquireData():
-    with open('m_CI.csv', 'rb') as csvfile:
+    if os.path.exists('m_combined.csv'):
+        pass
+    else:
+        response = urllib2.urlopen('https://raw.githubusercontent.com/nevelo/quake-predict/master/m_combined.csv')
+        data = response.read()
+        filename="m_combined.csv"
+        file_ = open(filename, "wb")
+        file_.write(data)
+        file_.close()
+
+    with open('m_combined.csv', 'rb') as csvfile:
         data = csv.reader(csvfile)
         i = 0
         tempYear2 = 0
@@ -88,7 +100,7 @@ def acquireData():
             i += 1
             t = np.arange(i)
         csvfile.close()
-    with open('m_CI.csv', 'rb') as csvfile:
+    with open('m_combined.csv', 'rb') as csvfile:
         pwr = np.zeros(i)
         highMag = np.zeros(i)
         meanPwr = np.zeros(i)
@@ -192,6 +204,9 @@ for epoch in range(150):
         })[0]
         j +=1
         i += BATCH_SIZE
+        print(".", end='')
+        if (_%50==0):
+            print("")
 
     epoch_error /= ITERATIONS_PER_EPOCH
     valid_accuracy = session.run(accuracy, {
