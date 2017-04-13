@@ -184,6 +184,7 @@ print(error)
 
 plt.figure(2)
 plt.plot(t[n_*BATCH_SIZE:(n_+m)*BATCH_SIZE],output.flatten())
+plt.plot(t[n_*BATCH_SIZE:(n_+m)*BATCH_SIZE],highMag[n_*BATCH_SIZE:(n_+m)*BATCH_SIZE])
 plt.xlabel("P(E)")
 plt.ylabel("P(EQ > 5)")
 
