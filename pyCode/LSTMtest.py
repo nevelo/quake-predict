@@ -35,7 +35,7 @@ def acquireData():
     if os.path.exists('m_combined.csv'):
         pass
     else:
-        response = urllib2.urlopen('https://raw.githubusercontent.com/nevelo/quake-predict/master/m_combined.csv')
+        response = urllib2.urlopen('https://raw.githubusercontent.com/nevelo/quake-predict/master/csvData/m_combined.csv')
         data = response.read()
         filename="m_combined.csv"
         file_ = open(filename, "wb")
@@ -54,6 +54,7 @@ def acquireData():
         pwr = np.zeros(i)
         highMag = np.zeros(i)
         meanPwr = np.zeros(i)
+        mag = np.zeros(i)
         i = -1
         data = csv.reader(csvfile)
         for row in data:
@@ -61,6 +62,7 @@ def acquireData():
                 pwr[i] = row[5]
                 meanPwr[i] = row[6]
                 highMag[i] = row[7]
+                mag = row[3]
             i += 1
 
     highMag[highMag > 1] = 1
@@ -71,7 +73,7 @@ def acquireData():
 ################################################################################
 
 INPUT_SIZE    = 2       # 2 bits per timestep
-RNN_HIDDEN    = 200
+RNN_HIDDEN    = 400
 OUTPUT_SIZE   = 1       # 1 bit per timestep
 TINY          = 1e-6    # to avoid NaNs in logs
 LEARNING_RATE = 0.02
@@ -117,12 +119,12 @@ res = predicted_outputs
 ##                           TRAINING LOOP                                    ##
 ################################################################################
 
-ITERATIONS_PER_EPOCH = 100
-base = 2
+ITERATIONS_PER_EPOCH = 50
+base = 4
 BATCH_SIZE = int(100 * base)
 step = 50
 n = int(7500/step)
-m = int(18/base)
+m = int(20/base)
 n_ = int(75/base)
 
 t, pwr, meanPWR, highMag = acquireData()
@@ -152,24 +154,17 @@ session = tf.Session()
 
 session.run(tf.global_variables_initializer())
 
-for epoch in range(2):
-    epoch_error = 0
-    i = 0
-    j = 0
-    for _ in range(ITERATIONS_PER_EPOCH):
-        # here train_fn is what triggers backprop. error and accuracy on their
-        # own do not trigger the backprop.
-        epoch_error += session.run([error, train_fn], {
-            inputs: (x),
-            outputs: y,
-        })[0]
+epoch_error = 0
+for _ in range(ITERATIONS_PER_EPOCH):
+    # here train_fn is what triggers backprop. error and accuracy on their
+    # own do not trigger the backprop.
+    epoch_error += session.run([error, train_fn], {
+        inputs: (x),
+        outputs: y,
+    })[0]
 
-    epoch_error /= ITERATIONS_PER_EPOCH
-    valid_accuracy = session.run(accuracy, {
-        inputs:  xTest,
-        outputs: yTest,
-    })
-    print("Epoch %d, train error: %.4f" % (epoch, epoch_error))
+epoch_error /= ITERATIONS_PER_EPOCH
+print("Train error: %.4f" % (epoch_error))
 
 output = session.run(res, {
         inputs:  xTest,
@@ -189,7 +184,7 @@ plt.xlabel("P(E)")
 plt.ylabel("P(EQ > 5)")
 
 plt.figure(3)
-plt.plot(t[n*step:(n+m)*step], pwr[n*step:(n+m)*step])
+plt.plot(t[n_*BATCH_SIZE:(n_+m)*BATCH_SIZE], (2.0/3.0)*np.log10(pwr[n_*BATCH_SIZE:(n_+m)*BATCH_SIZE]))
 plt.xlabel("T")
 plt.ylabel("PWR")
 plt.show()
