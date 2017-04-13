@@ -155,16 +155,18 @@ train_fn = tf.train.AdamOptimizer(learning_rate=LEARNING_RATE).minimize(error)
 
 # assuming that absolute difference between output and correct answer is 0.5
 # or less we can round it to the correct output.
-accuracy = tf.reduce_mean(tf.cast(tf.abs(outputs - predicted_outputs) < 0.5, tf.float32))
+accuracy = tf.reduce_mean(
+    tf.nn.softmax_cross_entropy_with_logits(labels=outputs, logits=predicted_outputs))
+
+res = predicted_outputs
 
 
 ################################################################################
 ##                           TRAINING LOOP                                    ##
 ################################################################################
 
-NUM_BITS = 10
 ITERATIONS_PER_EPOCH = 100
-BATCH_SIZE = 5
+BATCH_SIZE = 30
 
 t, pwr, meanPWR, highMag = acquireData()
 size = np.size(t)
@@ -196,7 +198,7 @@ session = tf.Session()
 
 session.run(tf.global_variables_initializer())
 
-for epoch in range(150):
+for epoch in range(3):
     epoch_error = 0
     i = 0
     j = 0
@@ -207,11 +209,7 @@ for epoch in range(150):
             inputs: (x),
             outputs: y,
         })[0]
-        j +=1
-        i += BATCH_SIZE
         print(".", end='')
-        if (_%50==0):
-            print("")
 
     epoch_error /= ITERATIONS_PER_EPOCH
     valid_accuracy = session.run(accuracy, {
@@ -219,3 +217,9 @@ for epoch in range(150):
         outputs: yTest,
     })
     print("Epoch %d, train error: %.2f, valid accuracy: %.1f %%" % (epoch, epoch_error, valid_accuracy * 100.0))
+
+error = session.run(res, {
+        inputs:  xTest,
+        outputs: yTest,
+    })
+print(error)
