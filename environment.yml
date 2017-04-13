@@ -8,9 +8,13 @@ channels:
   'defaults'
 dependencies:
 - !!python/unicode
+  'basemap=1.0.7=np111py27_0'
+- !!python/unicode
   'curl=7.49.0=1'
 - !!python/unicode
   'cython=0.25.2=py27_0'
+- !!python/unicode
+  'geos=3.4.2=0'
 - !!python/unicode
   'hdf4=4.2.11=0'
 - !!python/unicode
