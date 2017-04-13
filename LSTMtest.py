@@ -70,8 +70,6 @@ def generate_batch(num_bits, batch_size):
             n is always 0
     """
 
-    print(batch_size)
-
     x = np.empty((num_bits, batch_size, 2))
     y = np.empty((num_bits, batch_size, 1))
 
@@ -136,7 +134,6 @@ outputs = tf.placeholder(tf.float32, (None, None, OUTPUT_SIZE)) # (time, batch, 
 cell = myCell(RNN_HIDDEN)
 
 batch_size    = tf.shape(inputs)[1]
-print(batch_size)
 initial_state = cell.zero_state(batch_size, tf.float32)
 
 rnn_outputs, rnn_states = tf.nn.dynamic_rnn(cell, inputs, initial_state=initial_state, time_major=True)
@@ -171,22 +168,29 @@ BATCH_SIZE = 5
 
 t, pwr, meanPWR, highMag = acquireData()
 size = np.size(t)
-trainPwr = pwr[:size-2000]
-trainMPwr = meanPWR[:size-2000]
-trainHMag = highMag[:size-2000]
-print(np.size(trainHMag))
-x = np.empty((size, BATCH_SIZE, 1))
-y = np.empty((size, BATCH_SIZE, 1))
-X, Y = generate_batch(num_bits=2, batch_size=5)
-print(X[0])
+
+x = np.empty((240, BATCH_SIZE, 1))
+y = np.empty((240, BATCH_SIZE, 1))
+
+xTest = np.empty((60, BATCH_SIZE, 1))
+yTest = np.empty((60, BATCH_SIZE, 1))
 
 for j in range(240):
     for i in range(BATCH_SIZE):
-        x[j,i, 0] = trainPwr[i + j*BATCH_SIZE]
+        x[j,i, 0] = pwr[i + j*BATCH_SIZE]
+
+for j in range(240, 300):
+    for i in range(BATCH_SIZE):
+        xTest[j-240,i, 0] = pwr[i + j*BATCH_SIZE]
 
 for j in range(240):
     for i in range(BATCH_SIZE):
-        y[j,i, 0] = trainHMag[i + j*BATCH_SIZE]
+        y[j,i, 0] = highMag[i + j*BATCH_SIZE]
+
+for j in range(240, 300):
+    for i in range(BATCH_SIZE):
+        yTest[j-240,i, 0] = highMag[i + j*BATCH_SIZE]
+
 
 session = tf.Session()
 
@@ -211,7 +215,7 @@ for epoch in range(150):
 
     epoch_error /= ITERATIONS_PER_EPOCH
     valid_accuracy = session.run(accuracy, {
-        inputs:  valid_x,
-        outputs: valid_y,
+        inputs:  xTest,
+        outputs: yTest,
     })
     print("Epoch %d, train error: %.2f, valid accuracy: %.1f %%" % (epoch, epoch_error, valid_accuracy * 100.0))
