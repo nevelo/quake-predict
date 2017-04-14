@@ -119,10 +119,10 @@ res = predicted_outputs
 ##                           TRAINING LOOP                                    ##
 ################################################################################
 
-ITERATIONS_PER_EPOCH = 50
+ITERATIONS_PER_EPOCH = 100
 base = 4
 BATCH_SIZE = int(100 * base)
-step = 50
+step = 25
 n = int(7500/step)
 m = int(20/base)
 n_ = int(75/base)
@@ -162,6 +162,7 @@ for _ in range(ITERATIONS_PER_EPOCH):
         inputs: (x),
         outputs: y,
     })[0]
+    print(_)
 
 epoch_error /= ITERATIONS_PER_EPOCH
 print("Train error: %.4f" % (epoch_error))
@@ -177,11 +178,13 @@ error = session.run(error, {
 print(error)
 
 
+
 plt.figure(2)
-plt.plot(t[n_*BATCH_SIZE:(n_+m)*BATCH_SIZE],output.flatten())
-plt.plot(t[n_*BATCH_SIZE:(n_+m)*BATCH_SIZE],highMag[n_*BATCH_SIZE:(n_+m)*BATCH_SIZE])
-plt.xlabel("P(E)")
+plt.plot(t[n_*BATCH_SIZE:(n_+m)*BATCH_SIZE],output.flatten(), label="Predicted Ouput")
+plt.plot(t[n_*BATCH_SIZE:(n_+m)*BATCH_SIZE],highMag[n_*BATCH_SIZE:(n_+m)*BATCH_SIZE], label = "Real Ouput")
+plt.xlabel("Day #")
 plt.ylabel("P(EQ > 5)")
+plt.legend()
 
 plt.figure(3)
 plt.plot(t[n_*BATCH_SIZE:(n_+m)*BATCH_SIZE], (2.0/3.0)*np.log10(pwr[n_*BATCH_SIZE:(n_+m)*BATCH_SIZE]))

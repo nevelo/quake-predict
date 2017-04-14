@@ -81,11 +81,11 @@ class EQLSTM(tf.contrib.rnn.LSTMCell):
         scope = vs.get_variable_scope()
         with vs.variable_scope(scope) as outer_scope:
             PBias_FC1 = tf.Variable(np.ones(self._num_units), dtype="float32")
-            PBias1 = tf.Variable(0, name="Pressure_Increase_Bias", dtype="float32")
-            WO1 = tf.Variable(0.5, name="output_Weighting", dtype="float32")
+            PBias1 = tf.Variable(30, name="Pressure_Increase_Bias", dtype="float32")
+            WO1 = tf.Variable(0.005, name="output_Weighting", dtype="float32")
             PBias_FC2 = tf.Variable(np.zeros(self._num_units), dtype="float32")
             PBias2 = tf.Variable(0, name="Pressure_Increase_Bias", dtype="float32")
-            WO2 = tf.Variable(4, name="output_Weighting", dtype="float32")
+            WO2 = tf.Variable(0.001, name="output_Weighting", dtype="float32")
             with vs.variable_scope("s"):
                 A = (_linear([inputs, s], self._num_units, bias=True))
 
