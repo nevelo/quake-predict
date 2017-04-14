@@ -1,0 +1,12 @@
+This file contains a program which scrapes the ANSS FTP for every
+earthquake between 1990 and 2016. Note that this dataset is about
+1 GB in size (in text!)  and has to open a new socket for every 
+month in that time frame.
+
+If you want to run it:
+
+    make
+    ./scrape
+
+It's in C because that's what I'm good at.  Barnaby would probably
+make some comment here about bash.
