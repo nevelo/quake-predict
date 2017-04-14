@@ -8,6 +8,7 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import variable_scope as vs
 from tensorflow.python.ops import nn_ops
 from tensorflow.python.util import nest
+import numpy as np
 
 
 def _linear(args, output_size, bias, bias_start=0.0):
@@ -79,27 +80,28 @@ class EQLSTM(tf.contrib.rnn.LSTMCell):
             s, p = array_ops.split(value=state, num_or_size_splits=2, axis=1)
         scope = vs.get_variable_scope()
         with vs.variable_scope(scope) as outer_scope:
-            Ws = tf.Variable(0.8, name="output_Weighting", dtype="float32")
-            Wp = tf.Variable(1, dtype="float32")
-            Os = tf.Variable(0.5, name="output_Weighting", dtype="float32")
-            Op = tf.Variable(0.5, name="output_Weighting", dtype="float32")
-            PBias = tf.Variable(1, name="Pressure_Increase_Bias", dtype="float32")
+            PBias_FC1 = tf.Variable(np.ones(self._num_units), dtype="float32")
+            PBias1 = tf.Variable(30, name="Pressure_Increase_Bias", dtype="float32")
+            WO1 = tf.Variable(0.005, name="output_Weighting", dtype="float32")
+            PBias_FC2 = tf.Variable(np.zeros(self._num_units), dtype="float32")
+            PBias2 = tf.Variable(0, name="Pressure_Increase_Bias", dtype="float32")
+            WO2 = tf.Variable(0.001, name="output_Weighting", dtype="float32")
             with vs.variable_scope("s"):
                 A = (_linear([inputs, s], self._num_units, bias=True))
 
             with vs.variable_scope("p"):
                 B = (_linear([inputs, p], self._num_units, bias=True))
 
-        new_s = (s * sigmoid(A + self._forget_bias) + inputs[:,0]*Ws)
+        new_s = (s * sigmoid(A + PBias_FC1) + inputs[:,0] + PBias1)
 
-        new_p = sigmoid(B) * p - Wp * inputs[:,0] + PBias
+        new_p = p * sigmoid(B + PBias_FC2) - inputs[:,0] + PBias2
 
         if self._state_is_tuple:
             new_state = LSTMStateTuple(new_s, new_p)
         else:
             new_state = array_ops.concat([new_s, new_p], 1)
 
-        out = new_s * Os + new_p * Op
+        out = new_s * WO2 + new_p * WO1
 
         return out, new_state
 
